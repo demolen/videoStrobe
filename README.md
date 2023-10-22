@@ -37,13 +37,13 @@ To generate a stroboscopic image from a local video:
 
 bash
 
-python script_name.py my_video.mp4
+python strobe.py my_video.mp4
 
 To generate a stroboscopic image from a YouTube video:
 
 bash
 
-python script_name.py "https://www.youtube.com/watch?v=example"
+python strobe.py "https://www.youtube.com/watch?v=example"
 
 Note:
 
@@ -58,6 +58,3 @@ License
 This script is provided as-is without any guarantees or warranty. Users are free to modify and distribute it under the terms of their choice.
 
 vbnet
-
-
-Replace `script_name.py` with the actual name of your script file. You can also add or modify the provided text to suit your needs.
