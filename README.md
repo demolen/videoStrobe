@@ -4,7 +4,7 @@ Video Strobe is a tool for making strobocopic images from Videos.
 
 How to use:
 
-1."pip install" the missing requirements
+1."pip install" the missing dependencies
 
 2."Python3 strobe.py -h" would print out the arguments.
 
