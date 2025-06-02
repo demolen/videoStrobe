@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import argparse
 import os
-from pytube import YouTube
+import yt_dlp
 import re
 import random
 import datetime
@@ -14,6 +14,7 @@ def postfix_datetime(filename):
     base, ext = os.path.splitext(filename)
     datetime_str = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
     return f"{base}_{datetime_str}{ext}"
+
 def sanitize_filename(filename):
     """
     Removes or replaces characters that aren't valid in file names.
@@ -26,20 +27,44 @@ def download_youtube_video(url, download_folder='temp_video_download'):
     if not os.path.exists(download_folder):
         os.makedirs(download_folder)
 
-    yt = YouTube(url)
-    video_title = sanitize_filename(yt.title)
-    video_path = os.path.join(download_folder, f"{video_title}.mp4")
-
-    if os.path.exists(video_path):
-        use_cached = input(f"'{video_title}.mp4' is already downloaded. Use cached version? (y/n): ").lower()
-        if use_cached == 'y':
-            print("Using cached video...")
+    # Configure yt-dlp options
+    ydl_opts = {
+        'format': 'bestvideo',  # Download best quality mp4, fallback to best available
+        'outtmpl': os.path.join(download_folder, '%(title)s.%(ext)s'),
+    }
+    
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        try:
+            # Get video info first
+            info = ydl.extract_info(url, download=False)
+            video_title = sanitize_filename(info['title'])
+            video_path = os.path.join(download_folder, f"{video_title}.mp4")
+            
+            # Check if file already exists
+            if os.path.exists(video_path):
+                use_cached = input(f"'{video_title}.mp4' is already downloaded. Use cached version? (y/n): ").lower()
+                if use_cached == 'y':
+                    print("Using cached video...")
+                    return video_path
+                elif use_cached == 'n':
+                    print("Redownloading video...")
+            
+            # Download the video
+            ydl_opts['outtmpl'] = os.path.join(download_folder, f"{video_title}.%(ext)s")
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl_download:
+                ydl_download.download([url])
+            
+            # Find the downloaded file (might have different extension)
+            for file in os.listdir(download_folder):
+                if file.startswith(video_title):
+                    return os.path.join(download_folder, file)
+            
             return video_path
-        elif use_cached == 'n':
-            print("Redownloading video...")
+            
+        except Exception as e:
+            print(f"Error downloading video: {e}")
+            return None
 
-    ys = yt.streams.filter(progressive=True, file_extension="mp4").order_by("resolution").desc().first()
-    return ys.download(download_folder, video_title)
 def generate_stroboscopic_image(video_path, output_image_path, threshold=50, blend_ratio=1.0, blur_size=5, open_kernel_size=5, frame_interval=1, duration_range=None, random_range=None):
     video = cv2.VideoCapture(video_path)
     fps = video.get(cv2.CAP_PROP_FPS)
@@ -150,5 +175,8 @@ if __name__ == "__main__":
     if "youtube.com" in input_path or "youtu.be" in input_path:
         print("Detected YouTube URL. Downloading video...")
         input_path = download_youtube_video(input_path)
+        if input_path is None:
+            print("Failed to download video. Exiting.")
+            exit(1)
 
     generate_stroboscopic_image(input_path, args.output, args.threshold, args.blend_ratio, args.blur_size, args.open_kernel_size, args.frame_interval, args.duration_range, args.random_range)

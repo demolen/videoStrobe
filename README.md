@@ -8,7 +8,7 @@ Generate a stroboscopic image from a video. This tool allows you to extract the 
 - `numpy`
 - `argparse`
 - `os`
-- `pytube`
+- `yt_dlp`
 - `re`
 - `random`
 - `datetime`
@@ -51,10 +51,15 @@ Ensure you have the required dependencies installed. You can use pip to install 
 
 bash
 
-pip install opencv-python pytube numpy
+pip install opencv-python yt_dlp numpy
 
 License
 
 This script is provided as-is without any guarantees or warranty. Users are free to modify and distribute it under the terms of their choice.
 
 vbnet
+
+
+UPDATE:
+
+strobe2.py is using another method for background detection and results in smoother image overall.
